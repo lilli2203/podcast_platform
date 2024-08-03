@@ -181,6 +181,20 @@ const CreatePodcast = () => {
               setImagePrompt={setImagePrompt}
             />
 
+            {audioUrl && (
+              <div className="mt-5 flex flex-col items-center">
+                <Label className="text-16 font-bold text-white-1">Audio Preview</Label>
+                <audio controls src={audioUrl} className="mt-2 w-full rounded-lg border border-gray-700" />
+              </div>
+            )}
+
+            {imageUrl && (
+              <div className="mt-5 flex flex-col items-center">
+                <Label className="text-16 font-bold text-white-1">Thumbnail Preview</Label>
+                <img src={imageUrl} alt="Generated Thumbnail" className="mt-2 w-full rounded-lg border border-gray-700" />
+              </div>
+            )}
+
             <div className="mt-10 w-full">
               <Button type="submit" className="text-16 w-full bg-orange-1 py-4 font-extrabold text-white-1 transition-all duration-500 hover:bg-black-1">
                 {isSubmitting ? (
