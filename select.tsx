@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import * as RadixSelect from '@radix-ui/react-select';
-import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -36,10 +36,7 @@ const ScrollUpButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <RadixSelect.ScrollUpButton
     ref={ref}
-    className={cn(
-      'flex cursor-default items-center justify-center py-1',
-      className
-    )}
+    className={cn('flex cursor-default items-center justify-center py-1', className)}
     {...props}
   >
     <ChevronUp className="h-4 w-4" />
@@ -53,10 +50,7 @@ const ScrollDownButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <RadixSelect.ScrollDownButton
     ref={ref}
-    className={cn(
-      'flex cursor-default items-center justify-center py-1',
-      className
-    )}
+    className={cn('flex cursor-default items-center justify-center py-1', className)}
     {...props}
   >
     <ChevronDown className="h-4 w-4" />
@@ -66,7 +60,7 @@ ScrollDownButton.displayName = 'ScrollDownButton';
 
 const SelectMenu = React.forwardRef<
   React.ElementRef<typeof RadixSelect.Content>,
-  React.ComponentPropsWithoutRef<typeof RadixSelect.Content>
+  React.ComponentPropsWithoutRef<typeof RadixSelect.Content> & { position?: 'popper' | 'itemAligned' }
 >(({ className, children, position = 'popper', ...props }, ref) => (
   <RadixSelect.Portal>
     <RadixSelect.Content
@@ -142,6 +136,45 @@ const SelectDivider = React.forwardRef<
 ));
 SelectDivider.displayName = 'SelectDivider';
 
+const SelectExample = () => {
+  const [selectedValue, setSelectedValue] = React.useState('');
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold">Custom Select Example</h2>
+      <CustomSelect onValueChange={setSelectedValue}>
+        <SelectButton>
+          <CustomSelectValue placeholder="Select an option..." />
+        </SelectButton>
+        <SelectMenu>
+          <SelectTitle>Options</SelectTitle>
+          <CustomSelectGroup>
+            <SelectOption value="option1">Option 1</SelectOption>
+            <SelectOption value="option2">Option 2</SelectOption>
+            <SelectOption value="option3">Option 3</SelectOption>
+          </CustomSelectGroup>
+          <SelectDivider />
+          <CustomSelectGroup>
+            <SelectOption value="option4">Option 4</SelectOption>
+            <SelectOption value="option5">Option 5</SelectOption>
+          </CustomSelectGroup>
+        </SelectMenu>
+      </CustomSelect>
+      <div className="text-sm text-gray-500">Selected Value: {selectedValue}</div>
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Custom Select Component</h1>
+      <SelectExample />
+    </div>
+  );
+};
+
+export default App;
 export {
   CustomSelect as Select,
   CustomSelectGroup as SelectGroup,
