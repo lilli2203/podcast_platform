@@ -1,3 +1,4 @@
+"use client";
 import { useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,8 @@ import { v4 as uuidv4 } from 'uuid';
 const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, setImagePrompt }: GenerateThumbnailProps) => {
   const [isAiThumbnail, setIsAiThumbnail] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -25,6 +28,7 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
 
   const handleImage = async (blob: Blob, fileName: string) => {
     setIsImageLoading(true);
+    setUploadError(null);
     setImage('');
 
     try {
@@ -35,12 +39,12 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
 
       const imageUrl = await getImageUrl({ storageId });
       setImage(imageUrl!);
+      setImagePreview(imageUrl!); // Set the image preview
       setIsImageLoading(false);
-      toast({
-        title: "Thumbnail generated successfully",
-      });
+      toast({ title: "Thumbnail generated successfully" });
     } catch (error) {
       console.error(error);
+      setUploadError('Error generating thumbnail');
       toast({ title: 'Error generating thumbnail', variant: 'destructive' });
       setIsImageLoading(false);
     }
@@ -59,6 +63,7 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
 
   const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
+    setUploadError(null);
 
     try {
       const files = e.target.files;
@@ -69,17 +74,34 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
       handleImage(blob, file.name);
     } catch (error) {
       console.error(error);
+      setUploadError('Error uploading image');
       toast({ title: 'Error uploading image', variant: 'destructive' });
     }
   };
 
+  const handleFileInputClick = () => {
+    if (imageRef.current) {
+      imageRef.current.click();
+    }
+  };
+
+  const handleAiThumbnailClick = () => {
+    setIsAiThumbnail(true);
+    setImagePreview(null); // Clear preview when switching to AI
+  };
+
+  const handleCustomImageClick = () => {
+    setIsAiThumbnail(false);
+    setImagePreview(null); // Clear preview when switching to custom upload
+  };
+
   return (
     <>
-      <div className="generate_thumbnail">
+      <div className="generate_thumbnail flex gap-4">
         <Button
           type="button"
           variant="plain"
-          onClick={() => setIsAiThumbnail(true)}
+          onClick={handleAiThumbnailClick}
           className={cn('', { 'bg-black-6': isAiThumbnail })}
         >
           Use AI to generate thumbnail
@@ -87,12 +109,13 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
         <Button
           type="button"
           variant="plain"
-          onClick={() => setIsAiThumbnail(false)}
+          onClick={handleCustomImageClick}
           className={cn('', { 'bg-black-6': !isAiThumbnail })}
         >
           Upload custom image
         </Button>
       </div>
+
       {isAiThumbnail ? (
         <div className="flex flex-col gap-5">
           <div className="mt-5 flex flex-col gap-2.5">
@@ -108,7 +131,11 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
             />
           </div>
           <div className="w-full max-w-[200px]">
-            <Button type="submit" className="text-16 bg-orange-1 py-4 font-bold text-white-1" onClick={generateImage}>
+            <Button
+              type="submit"
+              className="text-16 bg-orange-1 py-4 font-bold text-white-1"
+              onClick={generateImage}
+            >
               {isImageLoading ? (
                 <>
                   Generating
@@ -121,12 +148,12 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
           </div>
         </div>
       ) : (
-        <div className="image_div" onClick={() => imageRef?.current?.click()}>
+        <div className="image_div cursor-pointer" onClick={handleFileInputClick}>
           <Input
             type="file"
             className="hidden"
             ref={imageRef}
-            onChange={(e) => uploadImage(e)}
+            onChange={uploadImage}
           />
           {!isImageLoading ? (
             <Image src="/icons/upload-image.svg" width={40} height={40} alt="upload" />
@@ -140,8 +167,12 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
             <h2 className="text-12 font-bold text-orange-1">Click to upload</h2>
             <p className="text-12 font-normal text-gray-1">SVG, PNG, JPG, or GIF (max. 1080x1080px)</p>
           </div>
+          {uploadError && (
+            <div className="text-red-500 mt-2 text-sm">{uploadError}</div>
+          )}
         </div>
       )}
+
       {image && (
         <div className="flex-center w-full">
           <Image
@@ -151,6 +182,27 @@ const GenerateThumbnail = ({ setImage, setImageStorageId, image, imagePrompt, se
             className="mt-5"
             alt="thumbnail"
           />
+        </div>
+      )}
+
+      {imagePreview && (
+        <div className="flex-center w-full mt-5">
+          <Image
+            src={imagePreview}
+            width={200}
+            height={200}
+            className="border border-gray-300 rounded-lg"
+            alt="thumbnail preview"
+          />
+          <div className="mt-2 text-center">
+            <Button
+              type="button"
+              className="bg-red-500 text-white px-4 py-2 rounded"
+              onClick={() => setImagePreview(null)}
+            >
+              Remove Preview
+            </Button>
+          </div>
         </div>
       )}
     </>
